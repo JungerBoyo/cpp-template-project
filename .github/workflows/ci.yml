@@ -1,0 +1,105 @@
+name: ci
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+    branches:
+      - main
+
+env: 
+  CONAN_USER_HOME: "${{ github.workspace }}/conan-cache"
+
+jobs:
+  build-test: 
+    runs-on: ${{ matrix.os }}
+    strategy: 
+      fail-fast: false
+      matrix: # { win + [clang,msvc], unix + [clang,gcc], macos + [clang] }
+        os: 
+          - windows-2022
+          - windows-2019
+          - ubuntu-20.04
+          - macos-11
+        compiler:
+          - llvm-14.0.0
+          - gcc-12
+        generator:
+          - Ninja
+        include:
+          - os: windows-2022
+            compiler: msvc
+            generator: 'Visual Studio 17 2022'
+          - os: windows-2019
+            compiler: msvc
+            generator: 'Visual Studio 16 2019'
+        exclude:
+          - os: windows-2022
+            compiler: gcc-12
+            generator: Ninja
+          - os: windows-2019
+            compiler: gcc-12
+            generator: Ninja
+          - os: macos-11
+            compiler: gcc-12
+            generator: Ninja
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: "Cache setup"
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ${{ env.CONAN_USER_HOME }}
+          key: ${{matrix.os}}-${{matrix.compiler}}-${{matrix.generator}}-${{hashFiles('./conanfile.txt')}}-${{hashFiles('**/CMakeLists.txt')}}
+          restore-keys: ${{matrix.os}}-${{matrix.compiler}}-${{matrix.generator}}-${{hashFiles('./conanfile.txt')}}
+
+      - name: Setup cpp compiler and tools
+        with:
+          compiler: ${{ matrix.compiler }}
+          vcvarsall: ${{ contains(matrix.os, windows) }}
+          cmake: true
+          ninja: true
+          conan: true 
+          clangtidy: true
+          ccache: true
+
+      - name: configure project
+        run: cmake -S . -B ./build -G ${{ matrix.generator }} -DGIT_SHA:STRING=${{github.sha}} \
+              -DCMAKE_BUILD_TYPE=Debug                \
+              -DSTATIC_ANALYSIS                       \
+              -DENABLE_SANITIZERS                     \
+                -DENABLE_SANITIZER_LEAK               \      
+                -DENABLE_SANITIZER_ADDRESS            \
+                -DENABLE_SANITIZER_UNDEFINED_BEHAVIOR \ 
+              -DENABLE_CCACHE                         \
+              -DENABLE_TESTS
+     
+      - name: build project
+        run: cmake --build ./build
+
+      - name: test
+        run: ./build/test/catch2_main
+
+      - name: configure release
+        if: startsWith(github.ref, 'refs/tags') 
+        run: cmake -S . -B ./build -G ${{ matrix.generator }} -DGIT_SHA:STRING=${{github.sha}} -DCMAKE_BUILD_TYPE=Release
+
+      - name: build project release
+        if: startsWith(github.ref, 'refs/tags')
+        run: cmake --build ./build
+      
+      - name: cpack project
+        if: startsWith(github.ref, 'refs/tags')
+        working-directory: ./build
+        run: cpack -C CPackConfig.cmake -G ZIP
+
+      - name: publish release
+        if: startsWith(github.ref, 'refs/tags')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./build/*
+
