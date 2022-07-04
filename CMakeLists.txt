@@ -125,8 +125,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ### set up project metadata ###
 project(template
   VERSION 0.0.1
-  DESCRIPTION ""
-  HOMEPAGE_URL ""
+  DESCRIPTION "C++ template project set up with general structure, tests (catch2), tools and CI"
+  HOMEPAGE_URL "https://github.com/JungerBoyo/cpp-template-project"
   LANGUAGES C CXX
 )
 set(GIT_SHA "Unknown" CACHE STRING "SHA of this build")
