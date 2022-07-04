@@ -70,7 +70,7 @@ jobs:
 
       - name: configure project
         run: |
-          cmake -S . -B ./build -G ${{ matrix.generator }} \
+          'cmake -S . -B ./build -G ${{ matrix.generator }} \
               -DGIT_SHA:STRING=${{github.sha}} \
               -DCMAKE_BUILD_TYPE=Debug \
               -DSTATIC_ANALYSIS=ON \
@@ -79,7 +79,7 @@ jobs:
                 -DENABLE_SANITIZER_ADDRESS=ON \
                 -DENABLE_SANITIZER_UNDEFINED_BEHAVIOR=ON \ 
               -DENABLE_CCACHE=ON \
-              -DENABLE_TESTS=ON
+              -DENABLE_TESTS=ON'
      
       - name: build project
         run: cmake --build ./build
