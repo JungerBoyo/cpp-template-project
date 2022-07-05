@@ -8,10 +8,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES ".*Clan
   target_link_libraries(${PROJECT_NAME} INTERFACE --coverage)
 endif()
 
-# 1. see conan for full set up, read CI section in conan dcs
-# 2. write CI
-
-# add_test( ... )
+add_test(NAME run_tests COMMAND catch2_main)
 # ...
 # set_tests_properties ( ... )
 
