@@ -30,6 +30,10 @@ jobs:
         generator:
           - Ninja
         include:
+          - compiler: gcc-11
+            gcov_exe: gcov
+          - compiler: llvm-14.0.0
+            gcov_exe: "llvm-cov gcov"
           - os: windows-2022
             compiler: msvc
             generator: 'Visual Studio 17 2022'
@@ -69,6 +73,8 @@ jobs:
           conan: true 
           clangtidy: true
           ccache: true
+          gcovr: true
+          opencppcoverage: true
 
       - name: Cleanup Conan system packages (they are not properly cached)
         run: conan remove -f '*/system'
@@ -80,8 +86,18 @@ jobs:
       - name: build project
         run: cmake --build ./build
 
-      - name: run CTest
-        run: ctest --verbose --test-dir build
+      - name: run CTest and coverage (Unix)
+        if: runner.os != 'Windows'
+        working-directory: ./build
+        run: |
+          ctest
+          gcovr --delete --root ../ --print-summary --xml-pretty --xml coverage.xml . --gcov-executable '${{ matrix.gcov_exe }}'
+
+      - name: run CTest and coverage (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ./build
+        run: |
+          OpenCppCoverage.exe --export_type cobertura:coverage.xml --cover_children -- ctest -C Debug
 
       - name: configure release
         if: startsWith(github.ref, 'refs/tags') 
