@@ -22,7 +22,11 @@ add_subdirectory(hello_world)
 
 target_link_libraries(catch2_main
   PRIVATE
-    Catch2::Catch2
     hello_world_TEST
   # ...  
+)
+
+target_link_system_libraries(catch2_main
+  PRIVATE
+    Catch2::Catch2
 )

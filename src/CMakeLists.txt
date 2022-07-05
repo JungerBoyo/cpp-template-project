@@ -6,6 +6,8 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE 
+    project_options
+    project_warnings
     hello_world_IMPL
 )
 

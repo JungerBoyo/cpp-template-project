@@ -75,7 +75,7 @@ jobs:
 
       - name: configure project
         run: |
-          cmake -S . -B ./build -G "${{ matrix.generator }}" -DGIT_SHA:STRING=${{github.sha}} -DCMAKE_BUILD_TYPE=Debug -DSTATIC_ANALYSIS=ON -DENABLE_TESTS=ON
+          cmake -S . -B ./build -G "${{ matrix.generator }}" -DGIT_SHA:STRING=${{github.sha}} -DCMAKE_BUILD_TYPE=Debug -DENABLE_TESTS=ON
      
       - name: build project
         run: cmake --build ./build
