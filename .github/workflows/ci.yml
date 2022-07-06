@@ -90,14 +90,22 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: ./build
         run: |
-          ctest
+          ctest --verbose
           gcovr --delete --root ../ --print-summary --xml-pretty --xml coverage.xml . --gcov-executable '${{ matrix.gcov_exe }}'
 
       - name: run CTest and coverage (Windows)
         if: runner.os == 'Windows'
         working-directory: ./build
         run: |
-          OpenCppCoverage.exe --export_type cobertura:coverage.xml --cover_children -- ctest -C Debug
+          OpenCppCoverage.exe --export_type cobertura:coverage.xml --cover_children -- ctest -C Debug --verbose
+
+      - name: configure Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: build
+          files: coverage.xml
+          name: codecov-umbrella
+          verbose: true
 
       - name: configure release
         if: startsWith(github.ref, 'refs/tags') 
